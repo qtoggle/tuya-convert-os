@@ -1,0 +1,330 @@
+
+/* Common */
+
+* {
+    outline: 0;
+}
+
+html {
+    height: 100%;
+}
+
+body {
+    background: #333;
+    color: white;
+    margin: 0;
+    font-family: sans-serif, serif;
+    height: 100%;
+}
+
+a {
+    color: #62abea;
+}
+
+@keyframes spin {
+    100% {
+        transform:rotate(360deg);
+    }
+}
+
+div.button {
+    display: inline-block;
+    color: #fff;
+    background: #62abea;
+    line-height: 2em;
+    padding: 0 0.5em;
+    min-width: 6em;
+    border-radius: 0.2em;
+    text-align: center;
+    transition: background 0.1s linear;
+    user-select: none;
+    cursor: pointer;
+}
+
+div.button:FOCUS {
+    box-shadow: 0 0 0 0.2em #62abea4d;
+}
+
+div.button:ACTIVE {
+    background: #4e89bb;
+}
+
+div.button.danger {
+    background: #ff7c7c;
+}
+
+div.button.danger:FOCUS {
+    box-shadow: 0 0 0 0.2em #ff7c7c4d;
+}
+
+div.button.danger:ACTIVE {
+    background: #cc6363;
+}
+
+input[type=text] {
+    border: 0.0625em solid #62abea;
+    border-radius: 0.2em;
+    padding: 0.25em;
+    background: #444;
+    color: white;
+    resize: none;
+    box-sizing: border-box;
+    font-size: inherit;
+    font-family: inherit;
+    height: 2em;
+}
+
+input[type=text]:FOCUS {
+    box-shadow: 0 0 0 0.2em #62abea4d;
+}
+
+
+/* Main elements */
+
+div.main-column {
+    position: relative;
+    width: 50%;
+    height: 100%;
+    margin: auto;
+    background: #444;
+}
+
+@media screen and (orientation: portrait) {
+
+    div.main-column {
+        width: 100%;
+    }
+
+}
+
+div.top-bar {
+    line-height: 2em;
+    font-size: 1.5em;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    border-bottom: 1px solid #555;
+    box-shadow: 0 0 5px 5px rgba(0, 0, 0, 0.1);
+}
+
+div.main-container {
+    position: absolute;
+    top: 3em;
+    left: 0;
+    right: 0;
+    bottom: 1.75em;
+    overflow: auto;
+    background: #444;
+}
+
+div.bottom-bar {
+    display: grid;
+    z-index: 3;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    border-top: 1px solid #555;
+    font-size: 0.75em;
+    padding: 0.5em;
+    box-shadow: 0 0 5px 5px rgba(0, 0, 0, 0.1);
+}
+
+div.home-link > * {
+    vertical-align: bottom;
+}
+
+
+/* Disclaimer */
+
+div.disclaimer {
+    padding: 1em 0;
+    border-bottom: 1px solid #555;
+}
+
+div.disclaimer li {
+    padding-bottom: 0.5em;
+}
+
+ul.disclaimer {
+    display: none;
+    margin: 0;
+    padding-right: 2em;
+    padding-bottom: 1em;
+}
+
+ul.disclaimer.visible {
+    display: block;
+}
+
+ul.disclaimer > li {
+    list-style: none;
+    position: relative;
+}
+
+ul.disclaimer > li::BEFORE {
+    content: '';
+    display: inline-block;
+    position: absolute;
+    background-image: url('icons.svg');
+    left: -1.5em;
+    top: 0.1em;
+    width: 1em;
+    height: 1em;
+    background-size: 10em;
+}
+
+ul.disclaimer > li.warning::BEFORE {
+    background-position: 0 0;
+}
+
+ul.disclaimer > li.info::BEFORE {
+    background-position: -1em 0;
+}
+
+div.toggle-disclaimer {
+    text-align: center;
+}
+
+
+/* Status */
+
+div.status {
+    text-align: center;
+    padding: 1em;
+    border-bottom: 1px solid #555;
+}
+
+div.status-icon {
+    display: inline-block;
+    background-image: url('icons.svg');
+    width: 2em;
+    height: 2em;
+    background-size: 20em;
+    vertical-align: middle;
+    background-position: -6em 0;
+}
+
+span.status-label {
+    vertical-align: middle;
+}
+
+div.status-detail {
+    padding: 0.25em 0;
+}
+
+div.status-detail-button {
+    margin-left: 0.5em;
+}
+
+a.status-detail-link {
+    margin-left: 0.5em;
+}
+
+
+/* Firmware */
+
+div.firmware {
+    padding: 1em;
+    border-bottom: 1px solid #555;
+    display: none;
+}
+
+div.firmware.visible {
+    display: block;
+}
+
+div.firmware-source,
+div.firmware-details {
+    padding: 0.25em;
+    display: grid;
+    grid-template-columns: 1fr 3fr 10fr 5fr;
+    align-items: center;
+}
+
+div.firmware-source .source-specific {
+    visibility: hidden;
+}
+
+div.firmware-source.visible .source-specific {
+    visibility: visible;
+}
+
+div.firmware-source > input[type=radio] {
+    cursor: pointer;
+}
+
+div.firmware-source > label {
+    display: inline-block;
+    cursor: pointer;
+}
+
+div.button.firmware-get,
+div.button.firmware-upload {
+    margin-left: 0.5em;
+}
+
+span.firmware-upload-filename {
+    text-align: center;
+}
+
+div.firmware-details {
+    display: none;
+}
+
+div.firmware-details.visible {
+    display: block;
+}
+
+div.firmware-status {
+    grid-column-start: 3;
+    text-align: center;
+}
+
+span.firmware-status-message {
+    vertical-align: middle;
+}
+
+div.firmware-status-icon {
+    display: inline-block;
+    vertical-align: middle;
+    background-image: url('icons.svg');
+    width: 1em;
+    height: 1em;
+    background-size: 10em;
+}
+
+div.firmware-status-icon.valid {
+    background-position: -5em 0;
+}
+
+div.firmware-status-icon.error {
+    background-position: -4em 0;
+}
+
+div.firmware-size {
+    text-align: center;
+}
+
+div.point-of-no-return {
+    display: none;
+    padding: 1em;
+    text-align: center;
+    font-weight: bold;
+}
+
+div.point-of-no-return.visible {
+    display: block;
+}
+
+div.point-of-no-return > * {
+    vertical-align: middle;
+    cursor: pointer;
+}
+
+div.button.start-flash {
+    display: block;
+    margin: auto;
+    margin-top: 1em;
+    width: 5em;
+}

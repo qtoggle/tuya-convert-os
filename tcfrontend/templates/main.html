@@ -1,0 +1,104 @@
+<!DOCTYPE HTML>
+
+<html lang="en">
+    <head>
+        <title>Tuya Convert OS</title>
+        <link rel="stylesheet" type="text/css" href="{{ static_url('main.css') }}" />
+        <script type="text/javascript" src="{{ static_url('main.js') }}"></script>
+        <meta name="viewport" content="initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="theme-color" content="#444">
+        <meta name="apple-mobile-web-app-status-bar-style" content="#444">
+    </head>
+    <body>
+        <div class="main-column">
+            <div class="top-bar">Tuya Convert OS</div>
+            <div class="main-container">
+                <div class="disclaimer">
+                    <ul class="disclaimer" id="disclaimerList">
+                        <li class="warning">
+                            This tool is a customized Raspbian OS built on top of
+                            <a href="https://github.com/ct-Open-Source/tuya-convert">TUYA-CONVERT</a>, a collection of
+                            scripts to flash Tuya IoT devices with alternative firmware. All credits for the flashing
+                            procedure go the authors of TUYA-CONVERT project.
+                        </li>
+                        <li class="warning">
+                            Please be sure that you understand what you're doing before using this software. Flashing an
+                            alternative firmware can lead to <b>unexpected behavior</b> and/or render the <b>device
+                            unusable</b>, so that it might be permanently damaged (highly unlikely) or require soldering
+                            a serial connection to the processor in order to reflash it (likely).
+                        </li>
+                        <li class="warning">
+                            Be aware that you <b>use this software at your own risk</b> so none of the direct or indirect
+                            contributors to this tool can be held accountable for any damage done or loss of functionality.
+                        </li>
+                        <li class="info">
+                            To ensure the best chance of success, <b>do not connect your device with the official app</b> as
+                            it may automatically update the device, preventing this flashing method.
+                        </li>
+                        <li class="info">
+                            Do not attempt to flash more than <b>one device at a time</b>.
+                        </li>
+                        <li class="info">
+                            Make sure your device is in <b>pairing mode</b> before starting the flash procedure. Some
+                            devices enter pairing mode when powered on. Others require pressing a button for a few seconds.
+                            Some of them indicate the pairing mode by a (usually blue, blinking) LED.
+                        </li>
+                        <li class="info">
+                            Your custom firmware file size must not exceed <b>512 KB</b>.
+                        </li>
+                    </ul>
+                    <div class="toggle-disclaimer">
+                        <div class="button" id="toggleDisclaimerButton" tabindex="0"></div>
+                    </div>
+                </div>
+                <div class="status" id="statusDiv">
+                    <div class="status-icon" id="statusIconDiv"></div>
+                    <span class="status-label" id="statusLabelSpan"></span>
+                </div>
+                <div class="firmware" id="firmwareDiv">
+                    <div class="firmware-source" id="firmwareSourceURLDiv">
+                        <input type="radio" name="firmwareSource" value="url" id="firmwareSourceURLRadio">
+                        <label class="firmware-source-label" for="firmwareSourceURLRadio">URL</label>
+                        <input class="source-specific" type="text" id="firmwareURLTextInput" placeholder="https://...">
+                        <div class="button firmware-get source-specific" id="firmwareURLGetButton" tabindex="0">
+                            Get
+                        </div>
+                    </div>
+                    <div class="firmware-source" id="firmwareSourceUploadDiv">
+                        <input type="radio" name="firmwareSource" value="upload" id="firmwareSourceUploadRadio">
+                        <label class="firmware-source-label" for="firmwareSourceUploadRadio">Upload</label>
+                        <span class="firmware-upload-filename source-specific" id="firmwareUploadFilenameSpan"></span>
+                        <div class="button firmware-upload source-specific"  id="firmwareUploadButton" tabindex="0">
+                            Select
+                        </div>
+                    </div>
+                    <div class="firmware-details" id="firmwareDetailsDiv">
+                        <div class="firmware-status">
+                            <div class="firmware-status-icon" id="firmwareStatusIconDiv"></div>
+                            <span class="firmware-status-message" id="firmwareStatusMessageSpan"></span>
+                        </div>
+                        <div class="firmware-size">
+                            <span class="firmware-size" id="firmwareSizeSpan"></span>
+                        </div>
+                    </div>
+                    <div class="point-of-no-return" id="pointOfNoReturnDiv">
+                        <input type="checkbox" id="pointOfNoReturnCheck">
+                        <label for="pointOfNoReturnCheck">
+                            I understand that thins is the point of no return and I am sure I want to proceed with
+                            flashing
+                        </label>
+                        <div class="button start-flash danger" tabindex="0">Start Flash</div>
+                    </div>
+                </div>
+            </div>
+            <div class="bottom-bar">
+                <div class="home-link">
+                    <img src="{{ static_url('github.png') }}"/> visit us on
+                    <a href="https://github.com/qtoggle/tuya-convert-os">GitHub</a>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

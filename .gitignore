@@ -1,0 +1,9 @@
+*.log
+*.bak
+.venv
+.idea
+*.img
+*.zip
+*.dtb
+__pycache__
+*.pyc
