@@ -70,9 +70,12 @@
                         <input type="radio" name="firmwareSource" value="upload" id="firmwareSourceUploadRadio">
                         <label class="firmware-source-label" for="firmwareSourceUploadRadio">Upload</label>
                         <span class="firmware-upload-filename source-specific" id="firmwareUploadFilenameSpan"></span>
-                        <div class="button firmware-upload source-specific"  id="firmwareUploadButton" tabindex="0">
-                            Select
-                        </div>
+                        <input type="file" class="firmware-upload-file" id="firmwareUploadFileInput">
+                        <label for="firmwareUploadFileInput">
+                            <div class="button firmware-upload source-specific" id="firmwareUploadButton" tabindex="0">
+                                Select
+                            </div>
+                        </label>
                     </div>
                     <div class="firmware-details" id="firmwareDetailsDiv">
                         <div class="firmware-status">
@@ -89,7 +92,7 @@
                             I understand that thins is the point of no return and I am sure I want to proceed with
                             flashing
                         </label>
-                        <div class="button start-flash danger" tabindex="0">Start Flash</div>
+                        <div class="button start-flash danger" tabindex="0" id="startFlashButton">Start Flash</div>
                     </div>
                 </div>
             </div>

@@ -215,6 +215,7 @@ div.status-detail {
 
 div.status-detail-button {
     margin-left: 0.5em;
+    width: 15em;
 }
 
 a.status-detail-link {
@@ -262,6 +263,7 @@ div.firmware-source > label {
 div.button.firmware-get,
 div.button.firmware-upload {
     margin-left: 0.5em;
+    display: block;
 }
 
 span.firmware-upload-filename {
@@ -273,7 +275,7 @@ div.firmware-details {
 }
 
 div.firmware-details.visible {
-    display: block;
+    display: grid;
 }
 
 div.firmware-status {
@@ -292,18 +294,24 @@ div.firmware-status-icon {
     width: 1em;
     height: 1em;
     background-size: 10em;
-}
-
-div.firmware-status-icon.valid {
-    background-position: -5em 0;
+    background-position: -6em 0;
 }
 
 div.firmware-status-icon.error {
-    background-position: -4em 0;
+    background-position: -5em 0;
+}
+
+div.firmware-status-icon.progress {
+    background-position: -2em 0;
+    animation: spin 1s linear infinite;
 }
 
 div.firmware-size {
     text-align: center;
+}
+
+input.firmware-upload-file {
+    display: none;
 }
 
 div.point-of-no-return {

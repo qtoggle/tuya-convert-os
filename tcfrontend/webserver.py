@@ -1,12 +1,17 @@
 
 import os
+import logging
 
 from typing import List
 
 from tornado.escape import json_decode
+from tornado.httpclient import AsyncHTTPClient, HTTPClientError
 from tornado.web import Application, RequestHandler, HTTPError
 
 from tcfrontend import states
+
+
+logger = logging.getLogger(__name__)
 
 
 class MainPageHandler(RequestHandler):
@@ -49,10 +54,42 @@ class StatusHandler(RequestHandler, JSONRequestHandlerMixin):
             raise HTTPError(400, f'invalid transition')
 
 
+class FirmwareOriginalHandler(RequestHandler):
+    def get(self) -> None:
+        self.finish()
+
+
+class FirmwareProxyHandler(RequestHandler):
+    async def get(self) -> None:
+        http_client = AsyncHTTPClient()
+        url = self.get_argument('url')
+        logger.debug('proxy downloading firmware file at %s', url)
+
+        try:
+            response = await http_client.fetch(url)
+
+        except HTTPClientError as e:
+            logger.error('failed to download file at %s', url, exc_info=True)
+
+            raise HTTPError(status_code=e.code)
+
+        except Exception:
+            logger.error('failed to download file at %s', url, exc_info=True)
+
+            raise
+
+        else:
+            self.set_header('Content-Type', 'application/octet-stream')
+            self.set_header('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
+            await self.finish(response.body)
+
+
 def make_handlers() -> List[tuple]:
     return [
         (r'/', MainPageHandler),
-        (r'/state', StatusHandler)
+        (r'/state', StatusHandler),
+        (r'/firmware/original.bin', FirmwareOriginalHandler),
+        (r'/firmware/proxy', FirmwareProxyHandler)
     ]
 
 

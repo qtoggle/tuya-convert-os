@@ -10,27 +10,32 @@ from tcfrontend import tccontrol
 STATE_READY = 'ready'
 STATE_CONVERTING = 'converting'
 STATE_CONVERTED = 'converted'
-STATE_CONVERT_ERROR = 'convert-error'
+STATE_CONVERSION_CANCELLED = 'conversion-cancelled'
+STATE_CONVERSION_ERROR = 'conversion-error'
 STATE_FLASHING = 'flashing'
-STATE_FLASH_ERROR = 'flash-error'
+STATE_FLASHING_ERROR = 'flashing-error'
+STATE_FLASHED = 'flashed'
 
 STATES = {
     STATE_READY,
     STATE_CONVERTING,
     STATE_CONVERTED,
-    STATE_CONVERT_ERROR,
+    STATE_CONVERSION_CANCELLED,
+    STATE_CONVERSION_ERROR,
     STATE_FLASHING,
-    STATE_FLASH_ERROR
+    STATE_FLASHING_ERROR
 }
 
 EXTERNAL_TRANSITION_FUNCS = {
-    (STATE_READY, STATE_CONVERTING): tccontrol.start_conversion,  # Start conversion
-    (STATE_CONVERTING, STATE_READY): tccontrol.cancel_conversion,  # Cancel conversion
-    (STATE_CONVERTED, STATE_CONVERTING): tccontrol.start_conversion,  # Convert another one
-    (STATE_CONVERT_ERROR, STATE_CONVERTING): tccontrol.start_conversion,  # Retry
+    (STATE_READY, STATE_CONVERTING): tccontrol.start_conversion,  # Start Conversion
+    (STATE_CONVERTING, STATE_READY): tccontrol.cancel_conversion,  # Cancel Conversion
+    (STATE_CONVERSION_CANCELLED, STATE_CONVERTING): tccontrol.start_conversion,  # Restart Conversion
+    (STATE_CONVERTED, STATE_CONVERTING): tccontrol.start_conversion,  # Convert Another Device
+    (STATE_CONVERSION_ERROR, STATE_CONVERTING): tccontrol.start_conversion,  # Retry
     (STATE_CONVERTED, STATE_FLASHING): tccontrol.start_flash,  # Flash
-    (STATE_FLASH_ERROR, STATE_FLASHING): tccontrol.start_flash,  # Retry
-    (STATE_FLASH_ERROR, STATE_CONVERTING): tccontrol.start_conversion,  # Convert another one
+    (STATE_FLASHING_ERROR, STATE_FLASHING): tccontrol.start_flash,  # Retry
+    (STATE_FLASHING_ERROR, STATE_CONVERTING): tccontrol.start_conversion,  # Convert Another Device
+    (STATE_FLASHED, STATE_CONVERTING): tccontrol.start_conversion,  # Convert Another Device
 }
 
 STATE_PARAM_FUNCS = {
@@ -69,10 +74,10 @@ def check_internal_transition():
         new_state = STATE_CONVERTING
 
     elif tccontrol.has_flash_error():
-        new_state = STATE_FLASH_ERROR
+        new_state = STATE_FLASHING_ERROR
 
     elif tccontrol.has_conversion_error():
-        new_state = STATE_CONVERT_ERROR
+        new_state = STATE_CONVERSION_ERROR
 
     elif tccontrol.has_conversion_details():
         new_state = STATE_CONVERTED
