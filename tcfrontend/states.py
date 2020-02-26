@@ -1,5 +1,6 @@
 
 import asyncio
+import base64
 import logging
 
 from typing import Any, Dict
@@ -26,7 +27,7 @@ STATES = {
     STATE_FLASHING_ERROR
 }
 
-EXTERNAL_TRANSITION_FUNCS = {
+TRANSITION_REQUEST_FUNCS = {
     (STATE_READY, STATE_CONVERTING): tccontrol.start_conversion,  # Start Conversion
     (STATE_CONVERTING, STATE_READY): tccontrol.cancel_conversion,  # Cancel Conversion
     (STATE_CONVERSION_CANCELLED, STATE_CONVERTING): tccontrol.start_conversion,  # Restart Conversion
@@ -38,8 +39,15 @@ EXTERNAL_TRANSITION_FUNCS = {
     (STATE_FLASHED, STATE_CONVERTING): tccontrol.start_conversion,  # Convert Another Device
 }
 
-STATE_PARAM_FUNCS = {
-    STATE_CONVERTED: tccontrol.get_conversion_details
+STATE_GET_PARAM_FUNCS = {
+    STATE_CONVERTED: lambda: {k: v for k, v in tccontrol.get_conversion_details().items() if k != 'original_firmware'}
+}
+
+STATE_PREPROCESS_PARAM_FUNCS = {
+    STATE_FLASHING: lambda params: {
+        k: v if k != 'firmware' else base64.urlsafe_b64decode(v)
+        for k, v in params
+    }
 }
 
 UPDATE_INTERVAL = 1
@@ -56,15 +64,15 @@ class TransitionException(Exception):
     pass
 
 
-class InvalidExternalTransition(TransitionException):
+class InvalidTransitionRequest(TransitionException):
     def __init__(self, old_state: str, new_state: str) -> None:
         self.old_state: str = old_state
         self.new_state: str = new_state
 
-        super().__init__(f'Invalid external transition: ${old_state} -> ${new_state}')
+        super().__init__(f'Invalid transition request: ${old_state} -> ${new_state}')
 
 
-def check_internal_transition():
+def check_transition():
     global _state
 
     if tccontrol.is_flashing():
@@ -85,17 +93,17 @@ def check_internal_transition():
     else:
         new_state = STATE_READY
 
-    logger.debug('internal transition %s -> %s', _state, new_state)
+    logger.debug('transition %s -> %s', _state, new_state)
     _state = new_state
 
 
 async def update_loop():
     while True:
         try:
-            check_internal_transition()
+            check_transition()
 
         except Exception:
-            logger.error('internal transition check failed', exc_info=True)
+            logger.error('transition check failed', exc_info=True)
             interval = UPDATE_INTERVAL_ERROR
 
         else:
@@ -114,37 +122,40 @@ def get_state() -> str:
 
 
 def get_state_params() -> Dict[str, Any]:
-    func = STATE_PARAM_FUNCS.get(_state)
+    func = STATE_GET_PARAM_FUNCS.get(_state)
     if not func:
         return {}
 
     return func()
 
 
-async def handle_external_transition(old_state: str, new_state: str, **params: Any) -> None:
-    func = EXTERNAL_TRANSITION_FUNCS[(old_state, new_state)]
+async def handle_transition_request(old_state: str, new_state: str, **params: Any) -> None:
+    func = TRANSITION_REQUEST_FUNCS[(old_state, new_state)]
     func(**params)
 
 
-async def set_state(new_state: str, **params: Any) -> None:
+async def request_state(new_state: str, **params: Any) -> None:
     global _state
 
     if new_state == _state:
         return
 
-    logger.debug('attempt external transition %s -> %s', _state, new_state)
+    logger.debug('requesting transition %s -> %s', _state, new_state)
 
-    if (_state, new_state) not in EXTERNAL_TRANSITION_FUNCS:
-        raise InvalidExternalTransition(_state, new_state)
+    if (_state, new_state) not in TRANSITION_REQUEST_FUNCS:
+        raise InvalidTransitionRequest(_state, new_state)
+
+    func = STATE_PREPROCESS_PARAM_FUNCS.get(new_state)
+    if func:
+        params = func(params)
 
     try:
-        await handle_external_transition(_state, new_state, **params)
-        _state = new_state
+        await handle_transition_request(_state, new_state, **params)
 
     except Exception as e:
-        logger.error('external transition %s -> %s failed', _state, new_state, exc_info=True)
+        logger.error('requested transition %s -> %s failed', _state, new_state, exc_info=True)
 
-        raise TransitionException('External transition failed') from e
+        raise TransitionException('Requested transition failed') from e
 
 
 def init() -> None:

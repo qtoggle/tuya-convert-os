@@ -9,6 +9,7 @@ from tornado.httpclient import AsyncHTTPClient, HTTPClientError
 from tornado.web import Application, RequestHandler, HTTPError
 
 from tcfrontend import states
+from tcfrontend import tccontrol
 
 
 logger = logging.getLogger(__name__)
@@ -24,18 +25,18 @@ class JSONRequestHandlerMixin:
     request = None
 
     def prepare(self):
-        if self.request.headers['Content-Type'] == 'application/json':
+        if self.request.headers.get('Content-Type') == 'application/json':
             self.json = json_decode(self.request.body)
 
 
-class StatusHandler(RequestHandler, JSONRequestHandlerMixin):
+class StatusHandler(JSONRequestHandlerMixin, RequestHandler):
     def get(self) -> None:
         self.finish({
             'state': states.get_state(),
             'params': states.get_state_params()
         })
 
-    def patch(self) -> None:
+    async def patch(self) -> None:
         if self.json is None:
             raise HTTPError(400, 'expected JSON in request body')
 
@@ -45,18 +46,24 @@ class StatusHandler(RequestHandler, JSONRequestHandlerMixin):
 
         params = self.json.get('params', {})
 
-        # TODO: preprocess params
-
         try:
-            states.set_state(state, **params)
+            await states.request_state(state, **params)
 
-        except states.InvalidExternalTransition:
+        except states.InvalidTransitionRequest:
             raise HTTPError(400, f'invalid transition')
 
 
 class FirmwareOriginalHandler(RequestHandler):
     def get(self) -> None:
-        self.finish()
+        details = tccontrol.get_conversion_details()
+        if details is None or details.get('original_firmware') is None:
+            raise HTTPError(400, 'original firmware not available')
+
+        self.set_header('Content-Type', 'application/octet-stream')
+        self.set_header('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
+        self.set_header('Content-Disposition', 'attachment; filename="original.bin"')
+
+        self.finish(details['original_firmware'])
 
 
 class FirmwareProxyHandler(RequestHandler):
@@ -87,7 +94,7 @@ class FirmwareProxyHandler(RequestHandler):
 def make_handlers() -> List[tuple]:
     return [
         (r'/', MainPageHandler),
-        (r'/state', StatusHandler),
+        (r'/status', StatusHandler),
         (r'/firmware/original.bin', FirmwareOriginalHandler),
         (r'/firmware/proxy', FirmwareProxyHandler)
     ]

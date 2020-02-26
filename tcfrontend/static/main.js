@@ -122,7 +122,7 @@ function requestBinary({method, path, query = null, body = null, contentType = '
 /* API requests */
 
 function apiGetStatus() {
-    return requestJSON({method: 'GET', path: '/status'})
+    return requestJSON({method: 'GET', path: '/status'}).then(response => response.body)
 }
 
 /**

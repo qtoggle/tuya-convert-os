@@ -31,7 +31,7 @@ def get_conversion_details() -> Dict[str, Any]:
     return {
         'flash_size': 4 * 1024 * 1024,
         'flash_freq': 40,
-        'flash_mode': 'qio',
+        'flash_mode': 'QIO',
         'original_firmware': b'deadbeef'
     }
 
