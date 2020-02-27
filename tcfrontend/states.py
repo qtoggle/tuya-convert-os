@@ -29,7 +29,7 @@ STATES = {
 
 TRANSITION_REQUEST_FUNCS = {
     (STATE_READY, STATE_CONVERTING): tccontrol.start_conversion,  # Start Conversion
-    (STATE_CONVERTING, STATE_READY): tccontrol.cancel_conversion,  # Cancel Conversion
+    (STATE_CONVERTING, STATE_CONVERSION_CANCELLED): tccontrol.cancel_conversion,  # Cancel Conversion
     (STATE_CONVERSION_CANCELLED, STATE_CONVERTING): tccontrol.start_conversion,  # Restart Conversion
     (STATE_CONVERTED, STATE_CONVERTING): tccontrol.start_conversion,  # Convert Another Device
     (STATE_CONVERSION_ERROR, STATE_CONVERTING): tccontrol.start_conversion,  # Retry
@@ -81,17 +81,23 @@ def check_transition():
     elif tccontrol.is_converting():
         new_state = STATE_CONVERTING
 
-    elif tccontrol.has_flash_error():
+    elif tccontrol.get_flash_error() is not None:
         new_state = STATE_FLASHING_ERROR
 
-    elif tccontrol.has_conversion_error():
+    elif tccontrol.get_conversion_error():
         new_state = STATE_CONVERSION_ERROR
 
-    elif tccontrol.has_conversion_details():
+    elif tccontrol.get_conversion_details() is not None:
         new_state = STATE_CONVERTED
+
+    elif tccontrol.is_conversion_cancelled():
+        new_state = STATE_CONVERSION_CANCELLED
 
     else:
         new_state = STATE_READY
+
+    if _state == new_state:
+        return
 
     logger.debug('transition %s -> %s', _state, new_state)
     _state = new_state
@@ -156,6 +162,8 @@ async def request_state(new_state: str, **params: Any) -> None:
         logger.error('requested transition %s -> %s failed', _state, new_state, exc_info=True)
 
         raise TransitionException('Requested transition failed') from e
+
+    check_transition()
 
 
 def init() -> None:

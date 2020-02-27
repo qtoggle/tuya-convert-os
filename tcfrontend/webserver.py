@@ -31,6 +31,8 @@ class JSONRequestHandlerMixin:
 
 class StatusHandler(JSONRequestHandlerMixin, RequestHandler):
     def get(self) -> None:
+        self.set_header('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
+
         self.finish({
             'state': states.get_state(),
             'params': states.get_state_params()

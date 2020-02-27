@@ -232,7 +232,7 @@ class State {
     cancelConversion() {
         setState('loading', {message: 'Cancelling...'})
 
-        apiPatchStatus('ready')
+        apiPatchStatus('conversion-cancelled')
     }
 
     startFlash() {
