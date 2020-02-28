@@ -31,7 +31,8 @@ TRANSITION_REQUEST_FUNCS = {
     (STATE_READY, STATE_CONVERTING): tccontrol.start_conversion,  # Start Conversion
     (STATE_CONVERTING, STATE_CONVERSION_CANCELLED): tccontrol.cancel_conversion,  # Cancel Conversion
     (STATE_CONVERSION_CANCELLED, STATE_CONVERTING): tccontrol.start_conversion,  # Restart Conversion
-    (STATE_CONVERTED, STATE_CONVERTING): tccontrol.start_conversion,  # Convert Another Device
+    (STATE_CONVERTED, STATE_CONVERTING): tccontrol.restart_conversion,  # Convert Another Device
+    (STATE_CONVERTED, STATE_READY): tccontrol.clear_conversion,  # Clear Conversion
     (STATE_CONVERSION_ERROR, STATE_CONVERTING): tccontrol.start_conversion,  # Retry
     (STATE_CONVERTED, STATE_FLASHING): tccontrol.start_flash,  # Flash
     (STATE_FLASHING_ERROR, STATE_FLASHING): tccontrol.start_flash,  # Retry
@@ -46,7 +47,7 @@ STATE_GET_PARAM_FUNCS = {
 STATE_PREPROCESS_PARAM_FUNCS = {
     STATE_FLASHING: lambda params: {
         k: v if k != 'firmware' else base64.urlsafe_b64decode(v)
-        for k, v in params
+        for k, v in params.items()
     }
 }
 
@@ -81,7 +82,7 @@ def check_transition():
     elif tccontrol.is_converting():
         new_state = STATE_CONVERTING
 
-    elif tccontrol.get_flash_error() is not None:
+    elif tccontrol.get_flashing_error() is not None:
         new_state = STATE_FLASHING_ERROR
 
     elif tccontrol.get_conversion_error():
@@ -92,6 +93,9 @@ def check_transition():
 
     elif tccontrol.is_conversion_cancelled():
         new_state = STATE_CONVERSION_CANCELLED
+
+    elif tccontrol.is_flashing_done():
+        new_state = STATE_FLASHED
 
     else:
         new_state = STATE_READY

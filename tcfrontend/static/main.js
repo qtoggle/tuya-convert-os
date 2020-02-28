@@ -27,6 +27,73 @@ function setLocalStorageValue(key, value) {
 }
 
 
+/* Utils */
+
+
+/**
+ * @param {Object} obj1
+ * @param {Object} obj2
+ * @returns {Boolean}
+ */
+function deepEquals(obj1, obj2) {
+    if (obj1 === obj2) {
+        return true
+    }
+
+    if (typeof obj1 !== typeof obj2) {
+        return false
+    }
+
+    if (Array.isArray(obj1)) {
+        if (!Array.isArray(obj2)) {
+            return false
+        }
+
+        if (obj1.length !== obj2.length) {
+            return false
+        }
+
+        for (let i = 0; i < obj1.length; i++) {
+            if (!deepEquals(obj1[i], obj2[i])) {
+                return false
+            }
+        }
+
+        return true
+    }
+    else if (obj1 instanceof Object) {
+        if (!(obj2 instanceof Object)) {
+            return false
+        }
+
+        for (let key in obj1) {
+            if (obj1.hasOwnProperty(key)) {
+                if (!obj2.hasOwnProperty(key)) {
+                    return false
+                }
+
+                if (!deepEquals(obj1[key], obj2[key])) {
+                    return false
+                }
+            }
+        }
+
+        for (let key in obj2) {
+            if (obj2.hasOwnProperty(key)) {
+                if (!obj1.hasOwnProperty(key)) {
+                    return false
+                }
+            }
+        }
+
+        return true
+    }
+    else {
+        return false
+    }
+}
+
+
 /* AJAX */
 
 /**
@@ -224,22 +291,27 @@ class State {
     }
 
     startConversion() {
-        setState('loading', {message: 'Starting conversion...'})
-
         apiPatchStatus('converting')
+        setState('loading', {message: 'Starting conversion...'})
     }
 
     cancelConversion() {
-        setState('loading', {message: 'Cancelling...'})
-
         apiPatchStatus('conversion-cancelled')
+        setState('loading', {message: 'Cancelling...'})
+    }
+
+    clearConversion() {
+        apiPatchStatus('ready')
+        setState('loading', {message: 'Loading...'})
     }
 
     startFlash() {
-        setState('loading', {message: 'Starting flashing...'})
+        let uint8Array = new Uint8Array(currentFirmwareContent).slice(0, 512 * 1024)
+        let string = uint8Array.reduce((data, byte) => data + String.fromCharCode(byte), '')
+        let encodedFirmware = btoa(string)
 
-        let encodedFirmware = btoa(currentFirmwareContent)
         apiPatchStatus('flashing', {firmware: encodedFirmware})
+        setState('loading', {message: 'Starting flashing...'})
     }
 
 }
@@ -302,7 +374,7 @@ class ConvertedState extends State {
             {type: 'message', message: 'Your device has been successfully converted.'},
             {type: 'message', message: `Flash frequency: <b>${params['flash_freq']} MHz</b>`},
             {type: 'message', message: `Flash mode: <b>${params['flash_mode']}</b>`},
-            {type: 'message', message: `Flash size: <b>${params['flash_size'] / 1024} KB</b>`},
+            {type: 'message', message: `Flash size: <b>${params['flash_size'] * 1024} KB</b>`},
             {
                 type: 'link',
                 message: 'Download original firmware:',
@@ -310,7 +382,8 @@ class ConvertedState extends State {
                 link: '/firmware/original.bin'
             },
             {type: 'button', label: 'Flash Firmware', callback: showFirmware},
-            {type: 'button', label: 'Convert Another Device', callback: () => this.startConversion()}
+            {type: 'button', label: 'Convert Another Device', callback: () => this.startConversion()},
+            {type: 'button', label: 'Cancel', callback: () => this.clearConversion()}
         ]
     }
 
@@ -425,7 +498,7 @@ let currentStateParams = {}
  */
 function setState(stateName, params = {}) {
     let newState = STATES[stateName]
-    if (newState === currentState && currentStateParams === params) {
+    if (newState === currentState && deepEquals(currentStateParams, params)) {
         return
     }
 
@@ -526,6 +599,8 @@ function initStatus() {
 
 let currentFirmwareContent = null
 
+const FIRMWARE_MAGIC = 0xE9
+
 
 function initFirmware() {
     let firmwareSourceURLRadio = document.getElementById('firmwareSourceURLRadio')
@@ -533,7 +608,9 @@ function initFirmware() {
     let firmwareURLGetButton = document.getElementById('firmwareURLGetButton')
     let firmwareURLTextInput = document.getElementById('firmwareURLTextInput')
     let firmwareUploadFileInput = document.getElementById('firmwareUploadFileInput')
+    let firmwareUploadButton = document.getElementById('firmwareUploadButton')
     let startFlashButton = document.getElementById('startFlashButton')
+    let pointOfNoReturnCheck = document.getElementById('pointOfNoReturnCheck')
 
     function handleFirmwareSourceChange() {
         if (firmwareSourceURLRadio.checked) {
@@ -596,8 +673,16 @@ function initFirmware() {
         }
     })
 
+    firmwareUploadButton.addEventListener('click', function () {
+        document.getElementById('firmwareUploadFileInput').value = ''
+    })
+
     startFlashButton.addEventListener('click', function () {
         currentState.startFlash()
+    })
+
+    pointOfNoReturnCheck.addEventListener('change', function () {
+        startFlashButton.style.display = this.checked ? '' : 'none'
     })
 }
 
@@ -653,6 +738,7 @@ function showFirmwareDetails({message, valid = true, size = null, progress = fal
     }
 
     document.getElementById('firmwareDetailsDiv').classList.add('visible')
+    document.getElementById('startFlashButton').style.display = 'none'
 }
 
 function hideFirmwareDetails() {
@@ -670,6 +756,7 @@ function showPointOfNoReturn(firmwareContent) {
 
 function hidePointOfNoReturn() {
     document.getElementById('pointOfNoReturnDiv').classList.remove('visible')
+    document.getElementById('pointOfNoReturnCheck').checked = false
 
     currentFirmwareContent = null
 }
@@ -687,8 +774,13 @@ function validateFirmware(content) {
         message = 'firmware must have at least 1KB'
     }
     else if (content.byteLength > 512 * 1024) {
+        message = 'firmware will be truncated to 512KB'
+    }
+
+    let uint8Array = new Uint8Array((content))
+    if (uint8Array[0] !== FIRMWARE_MAGIC) {
         valid = false
-        message = 'firmware must not exceed 512KB'
+        message = 'firmware must start with magic byte'
     }
 
     return {

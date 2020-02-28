@@ -1,8 +1,10 @@
 
 import asyncio
+import io
 import logging
 import os
 import pexpect
+import re
 import signal
 
 from typing import Any, Dict, Optional
@@ -19,6 +21,21 @@ _conversion_cancelled: bool = False
 
 _flashing_task: Optional[asyncio.Task] = None
 _flashing_error: Optional[Exception] = None
+_flashing_done: bool = False
+
+
+class LogIO(io.TextIOBase):
+    def __init__(self, prefix):
+        self.prefix = prefix
+
+    def write(self, b: bytes) -> int:
+        s = b.decode()
+        for line in s.split('\n'):
+            line = re.sub(r'[\x00-\x1f]', '', line)
+            if line:
+                logger.debug('%s %s', self.prefix, line)
+
+        return len(b)
 
 
 class TCProcess(pexpect.spawn):
@@ -28,6 +45,7 @@ class TCProcess(pexpect.spawn):
     CMD = os.path.join(TUYA_CONVERT_DIR, 'start_flash.sh')
     CONVERT_TIMEOUT = 120
     DEFAULT_EXPECT_TIMEOUT = 2
+    MAGIC = b'\xE9'
 
     def __init__(self) -> None:
         self._original_firmware = None
@@ -41,16 +59,23 @@ class TCProcess(pexpect.spawn):
         self._conversion_ready = False
         self._flashing_ready = False
 
+        logger.debug('starting tuya-convert process')
+
         # Create a dummy custom firmware file placeholder; tuya-convert will pick it up as first option
         with open(self.CUSTOM_FIRMWARE_FILE, 'wb') as f:
-            f.write(b'\0' * 300 * 1024)
+            f.write(self.MAGIC * 300 * 1024)
 
         super().__init__(self.CMD, cwd=self.TUYA_CONVERT_DIR)
+
+        self.logfile_read = LogIO('<<<')
+        self.logfile_send = LogIO('>>>')
 
     def is_running(self) -> bool:
         return self.isalive()
 
     async def stop(self) -> None:
+        logger.debug('stopping tuya-convert process')
+
         if self.isalive():
             self.kill(signal.SIGTERM)
 
@@ -63,6 +88,7 @@ class TCProcess(pexpect.spawn):
         os.system('ps aux | grep hostapd | grep -v grep | tr -s ' ' | cut -d ' ' -f 2 | xargs -r kill -9')
         os.system('ps aux | grep smarthack | grep -v grep | tr -s ' ' | cut -d ' ' -f 2 | xargs -r kill -9')
         os.system('ps aux | grep mosquitto | grep -v grep | tr -s ' ' | cut -d ' ' -f 2 | xargs -r kill -9')
+        os.system('ps aux | grep dnsmasq | grep -v grep | tr -s ' ' | cut -d ' ' -f 2 | xargs -r kill -9')
 
     async def run_conversion(self):
         await self._run_until_press_enter()
@@ -118,8 +144,8 @@ class TCProcess(pexpect.spawn):
         self.sendline()
 
     async def _run_until_original_firmware(self) -> bytes:
-        await self.expect(r"curl: saved to filename '([a-zA-Z0-9-]+.bin)'", timeout=self.CONVERT_TIMEOUT, async_=True)
-        filename = self.match.group(1)
+        await self.expect(r"curl: Saved to filename '([a-zA-Z0-9-]+.bin)'", timeout=self.CONVERT_TIMEOUT, async_=True)
+        filename = self.match.group(1).decode()
 
         # Look through backups/*/*.bin for original firmware file; use most recent backup
         dirs = [os.path.join(self.BACKUPS_DIR, d) for d in os.listdir(self.BACKUPS_DIR)]
@@ -134,24 +160,24 @@ class TCProcess(pexpect.spawn):
         raise Exception('Could not find original firmware file')
 
     async def _run_until_chip_id(self) -> str:
-        await self.expect(r"ChipID: (.?*)\n", timeout=self.DEFAULT_EXPECT_TIMEOUT, async_=True)
-        return self.match.group(1)
+        await self.expect(r"ChipID: (.*?)\n", timeout=self.DEFAULT_EXPECT_TIMEOUT, async_=True)
+        return self.match.group(1).decode()
 
     async def _run_until_mac(self) -> str:
         await self.expect(r"MAC: ([a-fA-F0-9:]+)", timeout=self.DEFAULT_EXPECT_TIMEOUT, async_=True)
-        return self.match.group(1)
+        return self.match.group(1).decode()
 
     async def _run_until_flash_mode(self) -> Dict[str, Any]:
         await self.expect(r"FlashMode: (\d+)M ([A-Z]+) @ (\d+)MHz", timeout=self.DEFAULT_EXPECT_TIMEOUT, async_=True)
         return {
             'flash_size': int(self.match.group(1)),
-            'flash_mode': self.match.group(2),
+            'flash_mode': self.match.group(2).decode(),
             'flash_freq': int(self.match.group(3))
         }
 
     async def _run_until_flash_chip_id(self) -> str:
         await self.expect(r"FlashChipId: (\d+)", timeout=self.DEFAULT_EXPECT_TIMEOUT, async_=True)
-        return self.match.group(1)
+        return self.match.group(1).decode()
 
     async def _run_until_ready_to_flash(self) -> None:
         await self.expect('Ready to flash third party firmware!', timeout=self.DEFAULT_EXPECT_TIMEOUT, async_=True)
@@ -190,28 +216,52 @@ async def _conversion_task_func():
     global _conversion_task
     global _conversion_error
     global _conversion_details
+    global _flashing_error
+    global _flashing_done
 
     assert _process is not None
     _conversion_error = None
     _conversion_details = None
+    _flashing_done = False
+    _flashing_error = None
 
     try:
         await _process.run_conversion()
 
     except asyncio.CancelledError:
         logger.info('conversion task cancelled')
+        if _process:
+            await _process.stop()
+            _process = None
 
     except Exception as e:
         logger.error('conversion task failed', exc_info=True)
         _conversion_error = e
-        await _process.stop()
-        _process = None
+        if _process:
+            await _process.stop()
+            _process = None
 
     else:
         logger.info('conversion task ended', exc_info=True)
         _conversion_details = _process.get_conversion_details()
 
     _conversion_task = None
+
+
+async def _restart_conversion():
+    global _process
+    global _conversion_task
+    global _conversion_cancelled
+
+    if _conversion_task:
+        _conversion_task.cancel()
+        await _conversion_task
+
+    if _process:
+        await _process.stop()
+        _process = None
+
+    start_conversion()
 
 
 def start_conversion() -> None:
@@ -227,6 +277,10 @@ def start_conversion() -> None:
     _process = TCProcess()
     _conversion_cancelled = False
     _conversion_task = asyncio.create_task(_conversion_task_func())
+
+
+def restart_conversion() -> None:
+    asyncio.create_task(_restart_conversion())
 
 
 def cancel_conversion() -> None:
@@ -245,6 +299,26 @@ def cancel_conversion() -> None:
     asyncio.create_task(_process.stop())
 
     _conversion_task = None
+    _conversion_error = None
+    _conversion_details = None
+    _conversion_cancelled = True
+    _process = None
+
+
+def clear_conversion() -> None:
+    global _process
+    global _conversion_task
+    global _conversion_error
+    global _conversion_details
+    global _conversion_cancelled
+
+    logger.info('clearing conversion')
+
+    asyncio.create_task(_process.stop())
+
+    assert _process is not None
+    assert _conversion_task is None
+
     _conversion_error = None
     _conversion_details = None
     _conversion_cancelled = True
@@ -271,10 +345,13 @@ async def _flashing_task_func():
     global _process
     global _flashing_task
     global _flashing_error
+    global _flashing_done
+    global _conversion_details
 
     assert _process is not None
     assert _process.is_conversion_ready()
     _flashing_error = None
+    _flashing_done = False
 
     try:
         await _process.run_flashing()
@@ -282,11 +359,17 @@ async def _flashing_task_func():
     except Exception as e:
         logger.error('flashing task failed', exc_info=True)
         _flashing_error = e
-        await _process.stop()
-        _process = None
+        if _process:
+            await _process.stop()
+            _process = None
 
     else:
         logger.info('flashing task ended', exc_info=True)
+        _conversion_details = None
+        _flashing_done = True
+        if _process:
+            await _process.stop()
+            _process = None
 
     _flashing_task = None
 
@@ -308,5 +391,9 @@ def is_flashing() -> bool:
     return _flashing_task is not None
 
 
-def get_flash_error() -> Optional[Exception]:
+def get_flashing_error() -> Optional[Exception]:
     return _flashing_error
+
+
+def is_flashing_done() -> bool:
+    return _flashing_done
