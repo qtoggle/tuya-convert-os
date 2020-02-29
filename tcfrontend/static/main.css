@@ -289,7 +289,8 @@ div.firmware-details.visible {
 }
 
 div.firmware-status {
-    grid-column-start: 3;
+    grid-column-start: 1;
+    grid-column-end: 4;
     text-align: center;
 }
 
@@ -327,11 +328,12 @@ input.firmware-upload-file {
 div.point-of-no-return {
     display: none;
     padding: 1em;
-    text-align: center;
+    grid-template-columns: 1em auto;
+    grid-gap: 0.5em;
 }
 
 div.point-of-no-return.visible {
-    display: block;
+    display: grid;
 }
 
 div.point-of-no-return > * {
@@ -344,4 +346,6 @@ div.button.start-flash {
     margin: auto;
     margin-top: 1em;
     width: 5em;
+    grid-column-start: 1;
+    grid-column-end: 3;
 }

@@ -286,6 +286,24 @@ class State {
         return []
     }
 
+    /**
+     * @param {ArrayBuffer} firmware
+     * @param {?Object} flashParams
+     * @returns {String}
+     */
+    prepareFirmware(firmware, flashParams) {
+        let uint8Array = new Uint8Array(currentFirmwareContent).slice(0, 512 * 1024)
+        if (flashParams) {
+            uint8Array[2] = FIRMWARE_FLASH_SPI_MODES[flashParams['flash_mode']]
+            uint8Array[3] = FIRMWARE_FLASH_SIZES[flashParams['flash_size']] << 8
+            uint8Array[3] += FIRMWARE_FLASH_FREQS[flashParams['flash_freq']]
+        }
+
+        let string = uint8Array.reduce((data, byte) => data + String.fromCharCode(byte), '')
+
+        return btoa(string)
+    }
+
     onEnter() {
         hideFirmware()
     }
@@ -306,11 +324,12 @@ class State {
     }
 
     startFlash() {
-        let uint8Array = new Uint8Array(currentFirmwareContent).slice(0, 512 * 1024)
-        let string = uint8Array.reduce((data, byte) => data + String.fromCharCode(byte), '')
-        let encodedFirmware = btoa(string)
+        let flashParams = null
+        if (!document.getElementById('overrideFlashParamsCheck').checked) {
+            flashParams = currentStateParams
+        }
 
-        apiPatchStatus('flashing', {firmware: encodedFirmware})
+        apiPatchStatus('flashing', {firmware: this.prepareFirmware(currentFirmwareContent, flashParams)})
         setState('loading', {message: 'Starting flashing...'})
     }
 
@@ -607,6 +626,22 @@ function initStatus() {
 let currentFirmwareContent = null
 
 const FIRMWARE_MAGIC = 0xE9
+const FIRMWARE_FLASH_SPI_MODES = {
+    'QIO': 0x00,
+    'QOUT': 0x01,
+    'DIO': 0x02,
+    'DOUT': 0x03
+}
+const FIRMWARE_FLASH_SIZES = {
+    1: 0x2,
+    2: 0x3,
+    4: 0x4
+}
+const FIRMWARE_FLASH_FREQS = {
+    40: 0x0,
+    26: 0x2,
+    80: 0xF
+}
 
 
 function initFirmware() {
