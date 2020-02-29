@@ -343,7 +343,7 @@ class ReadyState extends State {
     makeDetails(params) {
         return [
             {type: 'message', message: 'Make sure your device is powered and in pairing mode.'},
-            {type: 'button', label: 'Convert', callback: () => this.startConversion()},
+            {type: 'button', label: 'Convert', cssClass: 'highlight', callback: () => this.startConversion()},
         ]
     }
 
@@ -381,7 +381,7 @@ class ConvertedState extends State {
                 label: 'original.bin',
                 link: '/firmware/original.bin'
             },
-            {type: 'button', label: 'Flash Firmware', callback: showFirmware},
+            {type: 'button', label: 'Flash Firmware', cssClass: 'highlight', callback: showFirmware},
             {type: 'button', label: 'Convert Another Device', callback: () => this.startConversion()},
             {type: 'button', label: 'Cancel', callback: () => this.clearConversion()}
         ]
@@ -517,13 +517,14 @@ function setState(stateName, params = {}) {
 
 /**
  * @param {String} type
- * @param {String} [message]
- * @param {String} [label]
- * @param {String} [link]
- * @param {Function} [callback]
+ * @param {?String} [message]
+ * @param {?String} [label]
+ * @param {?String} [link]
+ * @param {?String} [cssClass]
+ * @param {?Function} [callback]
  * @returns {HTMLElement}
  */
-function makeDetailDiv({type, message = null, label = null, link = null, callback = null}) {
+function makeDetailDiv({type, message = null, label = null, link = null, cssClass = null, callback = null}) {
     let detailDiv = document.createElement('div')
     detailDiv.classList.add('status-detail', `status-${type}`)
 
@@ -545,6 +546,9 @@ function makeDetailDiv({type, message = null, label = null, link = null, callbac
             buttonDiv.innerHTML = label
             buttonDiv.addEventListener('click', callback)
             buttonDiv.tabIndex = 0
+            if (cssClass) {
+                buttonDiv.classList.add(cssClass)
+            }
 
             detailDiv.appendChild(buttonDiv)
             break

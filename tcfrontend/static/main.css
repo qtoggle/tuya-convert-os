@@ -49,6 +49,18 @@ div.button:ACTIVE {
     background: #4e89bb;
 }
 
+div.button.highlight {
+    background: #ffab7a;
+}
+
+div.button.highlight:FOCUS {
+    box-shadow: 0 0 0 0.2em #ffab7a4d;
+}
+
+div.button.highlight:ACTIVE {
+    background: #cc8962;
+}
+
 div.button.danger {
     background: #ff7c7c;
 }
@@ -104,7 +116,6 @@ div.top-bar {
     position: relative;
     z-index: 2;
     border-bottom: 1px solid #555;
-    box-shadow: 0 0 5px 5px rgba(0, 0, 0, 0.1);
 }
 
 div.main-container {
@@ -127,7 +138,6 @@ div.bottom-bar {
     border-top: 1px solid #555;
     font-size: 0.75em;
     padding: 0.5em;
-    box-shadow: 0 0 5px 5px rgba(0, 0, 0, 0.1);
 }
 
 div.home-link > * {
@@ -318,7 +328,6 @@ div.point-of-no-return {
     display: none;
     padding: 1em;
     text-align: center;
-    font-weight: bold;
 }
 
 div.point-of-no-return.visible {

@@ -46,10 +46,11 @@
                             Some of them indicate the pairing mode by a (usually blue, blinking) LED.
                         </li>
                         <li class="info">
-                            If your custom firmware file size exceeds <b>512 KB</b>, it will be truncated.
+                            If your custom firmware file size exceeds <b>512 kB</b>, it will be truncated.
                         </li>
                         <li class="info">
-                            Your custom firmware file size must contain the boot loader.
+                            Your custom firmware file size must also contain the boot loader (binary part that goes at
+                            flash address 0x0), not just the user code.
                         </li>
                     </ul>
                     <div class="toggle-disclaimer">
@@ -92,8 +93,8 @@
                     <div class="point-of-no-return" id="pointOfNoReturnDiv">
                         <input type="checkbox" id="pointOfNoReturnCheck">
                         <label for="pointOfNoReturnCheck">
-                            I understand that thins is the point of no return and I am sure I want to proceed with
-                            flashing
+                            I understand that thins is <b>the point of no return</b> and I am sure I want to proceed
+                            with flashing.
                         </label>
                         <div class="button start-flash danger" tabindex="0" id="startFlashButton">Start Flash</div>
                     </div>
