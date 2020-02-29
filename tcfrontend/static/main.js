@@ -375,6 +375,9 @@ class ConvertedState extends State {
             {type: 'message', message: `Flash frequency: <b>${params['flash_freq']} MHz</b>`},
             {type: 'message', message: `Flash mode: <b>${params['flash_mode']}</b>`},
             {type: 'message', message: `Flash size: <b>${params['flash_size'] * 1024} KB</b>`},
+            {type: 'message', message: `Flash ID: <b>${params['flash_chip_id']}</b>`},
+            {type: 'message', message: `Chip ID: <b>${params['chip_id']}</b>`},
+            {type: 'message', message: `MAC Address: <b>${params['mac']}</b>`},
             {
                 type: 'link',
                 message: 'Download original firmware:',
