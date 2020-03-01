@@ -10,6 +10,9 @@ cd /root
 rngd -r /dev/urandom
 echo 1 > /proc/sys/kernel/panic
 
+echo " * changing hostname"
+sed -i 's/raspberrypi/tuya-convert/' /etc/hostname /etc/hosts
+
 echo " * downloading tuya-convert"
 curl -L https://github.com/ct-Open-Source/tuya-convert/archive/31856ada24a1e951b4da849bff2ed056f544c51b.tar.gz -o tuya-convert.tar.gz
 tar xvf tuya-convert.tar.gz

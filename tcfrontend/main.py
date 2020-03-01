@@ -53,10 +53,13 @@ def main() -> None:
             address = get_ip_address(ifname)
 
         except IOError:
+            logger.info('interface %s has no IP address', ifname)
             continue
 
         server = httpserver.HTTPServer(app)
         server.listen(PORT, address=address)
+
+        logger.info('listening on interface %s, IP address %s', ifname, address)
 
     asyncio.get_event_loop().create_task(init())
     asyncio.get_event_loop().run_forever()
