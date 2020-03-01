@@ -8,19 +8,20 @@ cd ${WORK_DIR}
 set -e
 
 echo " * downloading kernel"
-#curl -L https://github.com/dhruvvyas90/qemu-rpi-kernel/raw/ec66c012f7cf2eaf936de1240ef81e1b20310d05/kernel-qemu-4.19.50-buster -o kernel.img
-#curl -L https://github.com/dhruvvyas90/qemu-rpi-kernel/raw/ec66c012f7cf2eaf936de1240ef81e1b20310d05/versatile-pb.dtb -o versatile-pb.dtb
+curl -L https://github.com/dhruvvyas90/qemu-rpi-kernel/raw/ec66c012f7cf2eaf936de1240ef81e1b20310d05/kernel-qemu-4.19.50-buster -o kernel.img
+curl -L https://github.com/dhruvvyas90/qemu-rpi-kernel/raw/ec66c012f7cf2eaf936de1240ef81e1b20310d05/versatile-pb.dtb -o versatile-pb.dtb
     
 echo " * downloading raspbian image"
-#curl https://downloads.raspberrypi.org/raspbian_lite/images/raspbian_lite-2020-02-14/2020-02-13-raspbian-buster-lite.zip -o raspbian-lite.zip
+curl https://downloads.raspberrypi.org/raspbian_lite/images/raspbian_lite-2020-02-14/2020-02-13-raspbian-buster-lite.zip -o raspbian-lite.zip
     
 echo " * extracting raspbian image"
-#unzip raspbian-lite.zip
-#mv *raspbian*lite.img raspbian-lite.img
+rm -r raspbian-lite.img raspbian-lite.zip
+unzip raspbian-lite.zip
+mv *raspbian*lite.img raspbian-lite.img
 
 echo " * mounting raspbian root image"
-#boot_offs=$(fdisk -l raspbian-lite.img | grep raspbian-lite.img1 | tr -s ' ' | cut -d ' ' -f 2)
-#root_offs=$(fdisk -l raspbian-lite.img | grep raspbian-lite.img2 | tr -s ' ' | cut -d ' ' -f 2)
+boot_offs=$(fdisk -l raspbian-lite.img | grep raspbian-lite.img1 | tr -s ' ' | cut -d ' ' -f 2)
+root_offs=$(fdisk -l raspbian-lite.img | grep raspbian-lite.img2 | tr -s ' ' | cut -d ' ' -f 2)
 loop_dev=$(losetup -P -f --show raspbian-lite.img)
 mkdir -p boot
 mkdir -p root
@@ -32,7 +33,7 @@ cp setup.sh root
 chmod +x root/setup.sh
 
 echo " * copying tcfrontend"
-cp -r tcfrontend root
+cp -r tcfrontend root/root
 
 echo " * enabling ssh"
 touch boot/ssh
@@ -59,7 +60,7 @@ qemu-system-arm \
 sync
 
 echo " * compressing tuya-convert-os image"
-#cp raspbian-lite.img tuya-convert-os.img
-#zip tuya-convert-os.zip tuya-convert-os.img
+cp raspbian-lite.img tuya-convert-os.img
+zip tuya-convert-os.zip tuya-convert-os.img
 
-#echo " * tuya-convert-os.zip is ready"
+echo " * tuya-convert-os.zip is ready"
