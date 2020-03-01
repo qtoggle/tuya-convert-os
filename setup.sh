@@ -47,7 +47,8 @@ Description=Add AP Interface
 
 [Service]
 Type=oneshot
-ExecStart=rfkill unblock wlan && iw dev wlan0 interface add ap0 type __ap
+ExecStartPre=rfkill unblock wlan
+ExecStart=iw dev wlan0 interface add ap0 type __ap
 
 [Install]
 WantedBy=multi-user.target
