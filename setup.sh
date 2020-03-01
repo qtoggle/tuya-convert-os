@@ -83,6 +83,9 @@ EOF
 echo " * disabling dhcpcd on AP wifi adapter"
 echo "denyinterfaces ap0" >> /etc/dhcpcd.conf
 
+echo " * rfkill unblocking wlan"
+rfkill unblock wlan
+
 echo " * removing setup"
 rm /setup.sh
 
