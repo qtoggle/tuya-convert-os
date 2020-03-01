@@ -33,7 +33,7 @@ cp setup.sh root
 chmod +x root/setup.sh
 
 echo " * copying tcfrontend"
-cp -r tcfrontend root/root
+rsync -av tcfrontend root/root --exclude __pycache__ --exclude "*.pyc"
 
 echo " * enabling ssh"
 touch boot/ssh
