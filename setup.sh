@@ -28,6 +28,9 @@ sed -i 's/check_port tcp 80.*//' tuya-convert/scripts/setup_checks.sh
 # Don't attempt to kill wpa_supplicant - it doesn't interfere with tuya-convert
 sed -i 's/pidof wpa_supplicant/pidof wpa_supplicant_nevermind/' tuya-convert/scripts/setup_ap.sh
 
+echo " * installing pexpect python package"
+pip3 install pexpect==4.8.0
+
 echo " * disabling dnsmasq service"
 rm -f /etc/systemd/system/multi-user.target.wants/dnsmasq.service
 
