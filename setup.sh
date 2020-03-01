@@ -47,7 +47,7 @@ Description=Add AP Interface
 
 [Service]
 Type=oneshot
-ExecStart=iw dev wlan0 interface add ap0 type __ap
+ExecStart=rfkill unblock wlan && iw dev wlan0 interface add ap0 type __ap
 
 [Install]
 WantedBy=multi-user.target
@@ -82,9 +82,6 @@ EOF
 
 echo " * disabling dhcpcd on AP wifi adapter"
 echo "denyinterfaces ap0" >> /etc/dhcpcd.conf
-
-echo " * rfkill unblocking wlan"
-rfkill unblock wlan
 
 echo " * removing setup"
 rm /setup.sh

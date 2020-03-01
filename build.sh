@@ -15,8 +15,9 @@ echo " * downloading raspbian image"
 curl https://downloads.raspberrypi.org/raspbian_lite/images/raspbian_lite-2020-02-14/2020-02-13-raspbian-buster-lite.zip -o raspbian-lite.zip
     
 echo " * extracting raspbian image"
-rm -r raspbian-lite.img raspbian-lite.zip
+rm -f raspbian-lite.img
 unzip raspbian-lite.zip
+rm -f raspbian-lite.zip
 mv *raspbian*lite.img raspbian-lite.img
 
 echo " * mounting raspbian root image"
