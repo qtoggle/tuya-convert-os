@@ -31,6 +31,9 @@ echo " * copying setup.sh"
 cp setup.sh root
 chmod +x root/setup.sh
 
+echo " * copying tcfrontend"
+cp -r tcfrontend root
+
 echo " * enabling ssh"
 touch boot/ssh
 
