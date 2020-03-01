@@ -28,7 +28,7 @@ def main() -> None:
     logger.info('hello!')
 
     app = webserver.make_app()
-    app.listen(8888)
+    app.listen(80)
 
     asyncio.get_event_loop().create_task(init())
     asyncio.get_event_loop().run_forever()

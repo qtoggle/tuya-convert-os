@@ -19,7 +19,12 @@ mv tuya-convert-* tuya-convert
 echo " * configuring tuya-convert"
 tuya-convert/install_prereq.sh
 touch tuya-convert/scripts/eula_accepted
+# Use ap0 so wlan0 can be used to connect to user's wifi
 sed -i 's/WLAN=.*/WLAN=ap0/' tuya-convert/config.txt
+# Always use flash params that come with supplied firmware
+sed -i 's,files/$selection,files/$selection\&override=yes,' tuya-convert/scripts/firmware_picker.sh
+# We run tcfrontend on port 80, but different IP
+sed -i 's/check_port tcp 80.*//' scripts/setup_checks.sh
 
 echo " * disabling dnsmasq service"
 rm -f /etc/systemd/system/multi-user.target.wants/dnsmasq.service
@@ -44,19 +49,30 @@ WantedBy=multi-user.target
 EOF
 ln -s /lib/systemd/system/ap.service /etc/systemd/system/multi-user.target.wants/ap.service
 
-echo " * creating wpa_supplicant configuration"
-cat > /etc/wpa_supplicant/wpa_supplicant.conf << EOF
-ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
-update_config=1
+echo " * creating tcfrontend service"
+cat > /lib/systemd/system/tcfrontend.service << EOF
+[Unit]
+Description=Tuya-Convert Frontend
 
+[Service]
+Type=simple
+ExecStart=/root/tcfrontend/tcfrontend.sh
+
+[Install]
+WantedBy=multi-user.target
+EOF
+ln -s /lib/systemd/system/tcfrontend.service /etc/systemd/system/multi-user.target.wants/tcfrontend.service
+
+echo " * creating wpa_supplicant configuration for vtrust-flash"
+cat > /etc/wpa_supplicant/wpa_supplicant_vtrust.conf << EOF
 network={
     ssid="vtrust-flash"
     key_mgmt=NONE
 }
 EOF
 
-echo " * disabling dhcpcd on first wifi adapter"
-echo "denyinterfaces wlan0 ap0" >> /etc/dhcpcd.conf
+echo " * disabling dhcpcd on AP wifi adapter"
+echo "denyinterfaces ap0" >> /etc/dhcpcd.conf
 
 echo " * removing setup"
 rm /setup.sh
