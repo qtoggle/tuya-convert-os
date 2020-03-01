@@ -24,7 +24,9 @@ sed -i 's/WLAN=.*/WLAN=ap0/' tuya-convert/config.txt
 # Always use flash params that come with supplied firmware
 sed -i 's,files/$selection,files/$selection\&override=yes,' tuya-convert/scripts/firmware_picker.sh
 # We run tcfrontend on port 80, but different IP
-sed -i 's/check_port tcp 80.*//' scripts/setup_checks.sh
+sed -i 's/check_port tcp 80.*//' tuya-convert/scripts/setup_checks.sh
+# Don't attempt to kill wpa_supplicant - it doesn't interfere with tuya-convert
+sed -i 's/pidof wpa_supplicant/pidof wpa_supplicant_nevermind/' tuya-convert/scripts/setup_ap.sh
 
 echo " * disabling dnsmasq service"
 rm -f /etc/systemd/system/multi-user.target.wants/dnsmasq.service
@@ -64,7 +66,9 @@ EOF
 ln -s /lib/systemd/system/tcfrontend.service /etc/systemd/system/multi-user.target.wants/tcfrontend.service
 
 echo " * creating wpa_supplicant configuration for vtrust-flash"
-cat > /etc/wpa_supplicant/wpa_supplicant_vtrust.conf << EOF
+cat > /etc/wpa_supplicant/wpa_supplicant-wlan1.conf << EOF
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
 network={
     ssid="vtrust-flash"
     key_mgmt=NONE
