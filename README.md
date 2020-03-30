@@ -13,6 +13,7 @@ action.
 
  * a Raspberry Pi 3 or 4 board (any model)
  * a micro SD card (any size above 2GB will do)
+ * a wired network connection
 
 Optionally, the presence of a secondary Wi-Fi USB adapter will fix some cases where a 3rd Wi-Fi device has to be
 connected to the temporary access point.
@@ -24,20 +25,7 @@ connected to the temporary access point.
 2. Extract the compressed image.
 3. Follow [these instructions](https://www.raspberrypi.org/documentation/installation/installing-images/) to write the
 OS image on your SD card.
-4. If you plan to connect the Raspberry Pi to your WiFi network, create the file `wpa_supplicant.conf` on the boot
-partition with the following content:
-
-    ##### `wpa_supplicant.conf:`
-    ```
-    ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
-    update_config=1
-    
-    network={
-        ssid="your_ssid"
-        psk="your_network_key"
-    }
-    ```
-
+4. Connect the Raspberry Pi to your local network, using an ethernet cable.
 5. Boot your Raspberry Pi with the freshly written SD card. Find its IP address using one of the following methods (the
 hostname you should be looking for is `tuya-convert`):
 
