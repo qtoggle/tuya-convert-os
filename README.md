@@ -14,7 +14,7 @@ action.
  * a Raspberry Pi 3 or 4 board (any model)
  * a micro SD card (any size above 2GB will do)
 
-Optionally, the presence of a secondary WiFi USB adapter will fix some cases where a 3rd WiFi device has to be
+Optionally, the presence of a secondary Wi-Fi USB adapter will fix some cases where a 3rd Wi-Fi device has to be
 connected to the temporary access point.
 
 
@@ -27,7 +27,7 @@ OS image on your SD card.
 4. If you plan to connect the Raspberry Pi to your WiFi network, create the file `wpa_supplicant.conf` on the boot
 partition with the following content:
 
-    ##### `wpa_supplicant.conf`
+    ##### `wpa_supplicant.conf:`
     ```
     ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
     update_config=1
