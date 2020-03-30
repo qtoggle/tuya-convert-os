@@ -295,7 +295,7 @@ class State {
         let uint8Array = new Uint8Array(currentFirmwareContent).slice(0, 512 * 1024)
         if (flashParams) {
             uint8Array[2] = FIRMWARE_FLASH_SPI_MODES[flashParams['flash_mode']]
-            uint8Array[3] = FIRMWARE_FLASH_SIZES[flashParams['flash_size']] << 8
+            uint8Array[3] = FIRMWARE_FLASH_SIZES[flashParams['flash_size']] << 4
             uint8Array[3] += FIRMWARE_FLASH_FREQS[flashParams['flash_freq']]
         }
 
@@ -396,9 +396,9 @@ class ConvertedState extends State {
     makeDetails(params) {
         return [
             {type: 'message', message: 'Your device has been successfully converted.'},
-            {type: 'message', message: `Flash frequency: <b>${params['flash_freq']} MHz</b>`},
+            {type: 'message', message: `Flash frequency: <b>${params['flash_freq']}MHz</b>`},
             {type: 'message', message: `Flash mode: <b>${params['flash_mode']}</b>`},
-            {type: 'message', message: `Flash size: <b>${params['flash_size'] * 1024} KB</b>`},
+            {type: 'message', message: `Flash size: <b>${params['flash_size']}MB</b>`},
             {type: 'message', message: `Flash ID: <b>${params['flash_chip_id']}</b>`},
             {type: 'message', message: `Chip ID: <b>${params['chip_id']}</b>`},
             {type: 'message', message: `MAC Address: <b>${params['mac']}</b>`},
