@@ -328,7 +328,7 @@ input.firmware-upload-file {
 div.point-of-no-return {
     display: none;
     padding: 1em;
-    grid-template-columns: 1em auto;
+    grid-template-columns: 1em 1fr 1fr;
     grid-gap: 0.5em;
 }
 
@@ -341,11 +341,22 @@ div.point-of-no-return > * {
     cursor: pointer;
 }
 
+span.flash-params-label {
+    grid-column-start: 1;
+    grid-column-end: 3;
+    text-align: right;
+}
+
+label.point-of-no-return-description {
+    grid-column-start: 2;
+    grid-column-end: 4;
+}
+
 div.button.start-flash {
     display: block;
     margin: auto;
     margin-top: 1em;
     width: 5em;
     grid-column-start: 1;
-    grid-column-end: 3;
+    grid-column-end: 4;
 }

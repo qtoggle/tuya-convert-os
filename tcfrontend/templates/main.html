@@ -91,12 +91,27 @@
                         </div>
                     </div>
                     <div class="point-of-no-return" id="pointOfNoReturnDiv">
-                        <input type="checkbox" id="overrideFlashParamsCheck">
-                        <label for="overrideFlashParamsCheck">
-                            Override flash parameters (size, mode & frequency), using those specified by your firmware.
-                        </label>
+                        <span class="flash-params-label">Flash frequency</span>
+                        <select id="flashFrequencySelect">
+                            <option value="26">26MHz</option>
+                            <option value="40">40MHz</option>
+                            <option value="80">80MHz</option>
+                        </select>
+                        <span class="flash-params-label">Flash mode</span>
+                        <select id="flashModeSelect">
+                            <option value="DOUT">DOUT</option>
+                            <option value="DIO">DIO</option>
+                            <option value="QOUT">QOUT</option>
+                            <option value="QIO">QIO</option>
+                        </select>
+                        <span class="flash-params-label">Flash size</span>
+                        <select id="flashSizeSelect">
+                            <option value="1">1MB</option>
+                            <option value="2">2MB</option>
+                            <option value="4">4MB</option>
+                        </select>
                         <input type="checkbox" id="pointOfNoReturnCheck">
-                        <label for="pointOfNoReturnCheck">
+                        <label for="pointOfNoReturnCheck" class="point-of-no-return-description">
                             I understand that this is <b>the point of no return</b> and I am sure I want to proceed
                             with flashing.
                         </label>

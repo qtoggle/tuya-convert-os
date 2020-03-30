@@ -324,9 +324,14 @@ class State {
     }
 
     startFlash() {
-        let flashParams = null
-        if (!document.getElementById('overrideFlashParamsCheck').checked) {
-            flashParams = currentStateParams
+        let flashFrequencySelect = document.getElementById('flashFrequencySelect')
+        let flashModeSelect = document.getElementById('flashModeSelect')
+        let flashSizeSelect = document.getElementById('flashSizeSelect')
+        
+        let flashParams = {
+            flash_freq: flashFrequencySelect.value,
+            flash_mode: flashModeSelect.value,
+            flash_size: flashSizeSelect.value
         }
 
         apiPatchStatus('flashing', {firmware: this.prepareFirmware(currentFirmwareContent, flashParams)})
@@ -794,6 +799,14 @@ function showPointOfNoReturn(firmwareContent) {
     document.getElementById('pointOfNoReturnDiv').classList.add('visible')
 
     currentFirmwareContent = firmwareContent
+    
+    let flashFrequencySelect = document.getElementById('flashFrequencySelect')
+    let flashModeSelect = document.getElementById('flashModeSelect')
+    let flashSizeSelect = document.getElementById('flashSizeSelect')
+    
+    flashFrequencySelect.value = currentStateParams.flash_freq
+    flashModeSelect.value = currentStateParams.flash_mode
+    flashSizeSelect.value = currentStateParams.flash_size
 }
 
 function hidePointOfNoReturn() {
