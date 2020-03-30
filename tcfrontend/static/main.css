@@ -138,10 +138,20 @@ div.bottom-bar {
     border-top: 1px solid #555;
     font-size: 0.75em;
     padding: 0.5em;
+    grid-template-columns: 1fr 1fr 1fr;
+    align-items: center;
 }
 
 div.home-link > * {
     vertical-align: bottom;
+}
+
+div.name-version {
+    text-align: center;
+}
+
+div.copyright {
+    text-align: right;
 }
 
 

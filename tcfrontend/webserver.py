@@ -10,6 +10,7 @@ from tornado.web import Application, RequestHandler, HTTPError
 
 from tcfrontend import states
 from tcfrontend import tccontrol
+from tcfrontend import VERSION
 
 
 logger = logging.getLogger(__name__)
@@ -17,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 class MainPageHandler(RequestHandler):
     def get(self) -> None:
-        self.render('main.html')
+        self.render('main.html', version=VERSION)
 
 
 class JSONRequestHandlerMixin:
@@ -107,5 +108,6 @@ def make_app() -> Application:
         handlers=make_handlers(),
         template_path=os.path.join(os.path.dirname(__file__), 'templates'),
         static_path=os.path.join(os.path.dirname(__file__), 'static'),
-        debug=False
+        debug=False,
+        compiled_template_cache=False
     )
