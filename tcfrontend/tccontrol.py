@@ -43,7 +43,7 @@ class TCProcess(pexpect.spawn):
     BACKUPS_DIR = os.path.join(TUYA_CONVERT_DIR, 'backups')
     CUSTOM_FIRMWARE_FILE = os.path.join(TUYA_CONVERT_DIR, 'files', '_custom.bin')
     CMD = os.path.join(TUYA_CONVERT_DIR, 'start_flash.sh')
-    CONVERT_TIMEOUT = 120
+    CONVERT_TIMEOUT = 300
     DEFAULT_EXPECT_TIMEOUT = 2
     MAGIC = b'\xE9'
 
