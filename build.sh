@@ -16,14 +16,31 @@ curl https://downloads.raspberrypi.org/raspbian_lite/images/raspbian_lite-2020-0
     
 echo " * extracting raspbian image"
 rm -f raspbian-lite.img
-unzip raspbian-lite.zip
+unzip -o raspbian-lite.zip
 rm -f raspbian-lite.zip
 mv *raspbian*lite.img raspbian-lite.img
 
+echo " * increasing disk image size"
+dd if=/dev/zero of=raspbian-lite.img bs=1M count=512  oflag=append conv=notrunc
+fdisk -u=sectors raspbian-lite.img <<END
+d
+
+n
+
+
+532480
+
+w
+END
+sync
+
 echo " * mounting raspbian root image"
-boot_offs=$(fdisk -l raspbian-lite.img | grep raspbian-lite.img1 | tr -s ' ' | cut -d ' ' -f 2)
-root_offs=$(fdisk -l raspbian-lite.img | grep raspbian-lite.img2 | tr -s ' ' | cut -d ' ' -f 2)
 loop_dev=$(losetup -P -f --show raspbian-lite.img)
+
+echo " * resizing root partition"
+e2fsck -f ${loop_dev}p2
+resize2fs ${loop_dev}p2
+
 mkdir -p boot
 mkdir -p root
 mount ${loop_dev}p1 boot
