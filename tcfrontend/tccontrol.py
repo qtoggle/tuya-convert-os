@@ -44,8 +44,9 @@ class TCProcess(pexpect.spawn):
     SKIP_BACKUP_FLAG_FILE = os.path.join(TUYA_CONVERT_DIR, '_skip_backup')
     CUSTOM_FIRMWARE_FILE = os.path.join(TUYA_CONVERT_DIR, 'files', '_custom.bin')
     CMD = os.path.join(TUYA_CONVERT_DIR, 'start_flash.sh')
-    CONVERT_TIMEOUT = 300
     DEFAULT_EXPECT_TIMEOUT = 2
+    CONVERT_TIMEOUT = 180
+    FLASH_TIMEOUT = 60
     MAGIC = b'\xE9'
 
     def __init__(self, download_backup: Optional[bool]) -> None:
@@ -225,7 +226,7 @@ class TCProcess(pexpect.spawn):
         self.send('y')
 
     async def _run_until_flashed_successfully(self) -> None:
-        await self.expect(r'successfully in \d+ms, rebooting\.\.\.', timeout=30, async_=True)
+        await self.expect(r'successfully in \d+ms, rebooting\.\.\.', timeout=self.FLASH_TIMEOUT, async_=True)
 
 
 async def _conversion_task_func():
