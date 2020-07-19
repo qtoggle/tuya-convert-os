@@ -41,13 +41,16 @@ class LogIO(io.TextIOBase):
 class TCProcess(pexpect.spawn):
     TUYA_CONVERT_DIR = '/root/tuya-convert'
     BACKUPS_DIR = os.path.join(TUYA_CONVERT_DIR, 'backups')
+    SKIP_BACKUP_FLAG_FILE = os.path.join(TUYA_CONVERT_DIR, '_skip_backup')
     CUSTOM_FIRMWARE_FILE = os.path.join(TUYA_CONVERT_DIR, 'files', '_custom.bin')
     CMD = os.path.join(TUYA_CONVERT_DIR, 'start_flash.sh')
     CONVERT_TIMEOUT = 300
     DEFAULT_EXPECT_TIMEOUT = 2
     MAGIC = b'\xE9'
 
-    def __init__(self) -> None:
+    def __init__(self, download_backup: Optional[bool]) -> None:
+        self._download_backup = download_backup
+    
         self._original_firmware = None
         self._chip_id = None
         self._mac = None
@@ -64,6 +67,18 @@ class TCProcess(pexpect.spawn):
         # Create a dummy custom firmware file placeholder; tuya-convert will pick it up as first option
         with open(self.CUSTOM_FIRMWARE_FILE, 'wb') as f:
             f.write(self.MAGIC * 300 * 1024)
+        
+        if download_backup is not None:
+            if download_backup:
+                try:
+                    os.remove(self.SKIP_BACKUP_FLAG_FILE)
+                
+                except FileNotFoundError:
+                    pass
+            
+            else:
+                with open(self.SKIP_BACKUP_FLAG_FILE, 'w'):
+                    pass
 
         super().__init__(self.CMD, cwd=self.TUYA_CONVERT_DIR)
 
@@ -94,8 +109,9 @@ class TCProcess(pexpect.spawn):
         await self._run_until_press_enter()
         logger.debug('smart config pairing procedure started')
 
-        self._original_firmware = await self._run_until_original_firmware()
-        logger.debug('got original firmware')
+        if self._download_backup:
+            self._original_firmware = await self._run_until_original_firmware()
+            logger.debug('got original firmware')
 
         self._chip_id = await self._run_until_chip_id()
         logger.debug('got chip id: %s', self._chip_id)
@@ -131,6 +147,7 @@ class TCProcess(pexpect.spawn):
 
         return {
             'original_firmware': self._original_firmware,
+            'has_original_firmware': self._original_firmware is not None,
             'chip_id': self._chip_id,
             'mac': self._mac,
             'flash_mode': self._flash_mode,
@@ -248,7 +265,7 @@ async def _conversion_task_func():
     _conversion_task = None
 
 
-async def _restart_conversion():
+async def _restart_conversion(download_backup: Optional[bool]):
     global _process
     global _conversion_task
     global _conversion_cancelled
@@ -261,10 +278,10 @@ async def _restart_conversion():
         await _process.stop()
         _process = None
 
-    start_conversion()
+    start_conversion(download_backup)
 
 
-def start_conversion() -> None:
+def start_conversion(download_backup: Optional[bool] = None) -> None:
     global _process
     global _conversion_task
     global _conversion_cancelled
@@ -274,13 +291,13 @@ def start_conversion() -> None:
     assert _process is None
     assert _conversion_task is None
 
-    _process = TCProcess()
+    _process = TCProcess(download_backup)
     _conversion_cancelled = False
     _conversion_task = asyncio.create_task(_conversion_task_func())
 
 
-def restart_conversion() -> None:
-    asyncio.create_task(_restart_conversion())
+def restart_conversion(download_backup: Optional[bool] = None) -> None:
+    asyncio.create_task(_restart_conversion(download_backup))
 
 
 def cancel_conversion() -> None:

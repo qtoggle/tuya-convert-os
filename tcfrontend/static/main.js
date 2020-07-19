@@ -1,6 +1,8 @@
 
 const DISCLAIMER_HIDDEN_LOCAL_STORAGE_KEY = 'disclaimer-hidden'
 
+var lastDownloadBackup = true
+
 
 /* Local Storage */
 
@@ -308,8 +310,9 @@ class State {
         hideFirmware()
     }
 
-    startConversion() {
-        apiPatchStatus('converting')
+    startConversion(downloadBackup = lastDownloadBackup) {
+        lastDownloadBackup = downloadBackup
+        apiPatchStatus('converting', {download_backup: downloadBackup})
         setState('loading', {message: 'Starting conversion...'})
     }
 
@@ -367,7 +370,8 @@ class ReadyState extends State {
     makeDetails(params) {
         return [
             {type: 'message', message: 'Make sure your device is powered and in pairing mode.'},
-            {type: 'button', label: 'Convert', cssClass: 'highlight', callback: () => this.startConversion()},
+            {type: 'button', label: 'Convert', cssClass: 'highlight', callback: () => this.startConversion(true)},
+            {type: 'button', label: 'Convert Without Backup', callback: () => this.startConversion(false)},
         ]
     }
 
@@ -394,24 +398,33 @@ class ConvertedState extends State {
     label = 'CONVERTED'
 
     makeDetails(params) {
-        return [
+        let details = [
             {type: 'message', message: 'Your device has been successfully converted.'},
             {type: 'message', message: `Flash frequency: <b>${params['flash_freq']}MHz</b>`},
             {type: 'message', message: `Flash mode: <b>${params['flash_mode']}</b>`},
             {type: 'message', message: `Flash size: <b>${params['flash_size']}MB</b>`},
             {type: 'message', message: `Flash ID: <b>${params['flash_chip_id']}</b>`},
             {type: 'message', message: `Chip ID: <b>${params['chip_id']}</b>`},
-            {type: 'message', message: `MAC Address: <b>${params['mac']}</b>`},
-            {
+            {type: 'message', message: `MAC Address: <b>${params['mac']}</b>`}
+        ]
+        
+        if (params['has_original_firmware']) {
+            details.push({
                 type: 'link',
                 message: 'Download original firmware:',
                 label: 'original.bin',
                 link: '/firmware/original.bin'
-            },
+            })
+        }
+        
+        details = details.concat([
             {type: 'button', label: 'Flash Firmware', cssClass: 'highlight', callback: showFirmware},
-            {type: 'button', label: 'Convert Another Device', callback: () => this.startConversion()},
+            {type: 'button', label: 'Convert Another Device', callback: () => this.startConversion(true)},
+            {type: 'button', label: 'Convert Without Backup', callback: () => this.startConversion(false)},
             {type: 'button', label: 'Cancel', callback: () => this.clearConversion()}
-        ]
+        ])
+        
+        return details
     }
 
 }
@@ -424,7 +437,8 @@ class ConversionCancelledState extends State {
     makeDetails(params) {
         return [
             {type: 'message', message: 'Conversion has been cancelled.'},
-            {type: 'button', label: 'Restart Conversion', callback: () => this.startConversion()},
+            {type: 'button', label: 'Retry', cssClass: 'highlight', callback: () => this.startConversion()},
+            {type: 'button', label: 'Convert Without Backup', callback: () => this.startConversion(false)}
         ]
     }
 
@@ -467,7 +481,8 @@ class FlashedState extends State {
     makeDetails(params) {
         return [
             {type: 'message', message: 'Your device has been successfully flashed.'},
-            {type: 'button', label: 'Convert Another Device', callback: () => this.startConversion()},
+            {type: 'button', label: 'Convert Another Device', cssClass: 'highlight', callback: () => this.startConversion(true)},
+            {type: 'button', label: 'Convert Without Backup', callback: () => this.startConversion(false)}
         ]
     }
 
@@ -481,8 +496,9 @@ class FlashingErrorState extends State {
     makeDetails(params) {
         return [
             {type: 'message', message: params.message || 'Could not flash device.'},
-            {type: 'button', label: 'Retry', callback: () => this.startFlash()},
-            {type: 'button', label: 'Convert Another Device', callback: () => this.startConversion()}
+            {type: 'button', label: 'Retry', cssClass: 'highlight', callback: () => this.startFlash()},
+            {type: 'button', label: 'Convert Another Device', callback: () => this.startConversion(true)},
+            {type: 'button', label: 'Convert Without Backup', callback: () => this.startConversion(false)}
         ]
     }
 
@@ -606,7 +622,7 @@ function showStatus(state, details) {
 
     iconDiv.style.backgroundPositionX = `-${state.iconOffset * 2}em`
     iconDiv.style.animation = state.spinIcon ? 'spin 1s linear infinite' : ''
-    labelSpan.innerText = state.label;
+    labelSpan.innerText = state.label; /* Don't be tempted to remove this semicolon! */
 
     /* Remove existing detail divs */
    [...statusDiv.querySelectorAll('div.status-detail')].map(e => e.remove())

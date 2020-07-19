@@ -27,6 +27,10 @@ sed -i 's,files/$selection,files/$selection\&override=yes,' tuya-convert/scripts
 sed -i 's/check_port tcp 80.*//' tuya-convert/scripts/setup_checks.sh
 # Don't attempt to kill wpa_supplicant - it doesn't interfere with tuya-convert
 sed -i 's/pidof wpa_supplicant/pidof wpa_supplicant_nevermind/' tuya-convert/scripts/setup_ap.sh
+# Make firmware backup optional
+cat start_flash.sh | tr '\n' '\f' | sed -r 's,(echo "Fetching.*\sfi\s),if ! test -f ../_skip_backup; then\n\1else\npushd . >/dev/null\nfi,g' | tr '\f' '\n' > tuya-convert/start_flash.sh.bak
+mv tuya-convert/start_flash.sh.bak tuya-convert/start_flash.sh
+sed -ri 's/read -p "Do you want to continue anyway.*//' tuya-convert/start_flash.sh
 
 echo " * installing pexpect python package"
 pip3 install pexpect==4.8.0
