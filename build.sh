@@ -77,8 +77,5 @@ qemu-system-arm \
     -nographic
 sync
 
-echo " * compressing tuya-convert-os image"
 cp raspbian-lite.img tuya-convert-os.img
-zip tuya-convert-os.zip tuya-convert-os.img
-
-echo " * tuya-convert-os.zip is ready"
+echo " * tuya-convert-os.img is ready"
