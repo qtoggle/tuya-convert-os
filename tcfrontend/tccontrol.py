@@ -178,7 +178,8 @@ class TCProcess(pexpect.spawn):
         raise Exception('Could not find original firmware file')
 
     async def _run_until_chip_id(self) -> str:
-        await self.expect(r"ChipID: (.*?)\n", timeout=self.DEFAULT_EXPECT_TIMEOUT, async_=True)
+        timeout = self.DEFAULT_EXPECT_TIMEOUT if self._download_backup else self.CONVERT_TIMEOUT
+        await self.expect(r"ChipID: (.*?)\n", timeout=timeout, async_=True)
         return self.match.group(1).decode()
 
     async def _run_until_mac(self) -> str:
