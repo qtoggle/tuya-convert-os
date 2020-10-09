@@ -35,6 +35,8 @@ END
 sync
 
 echo " * mounting raspbian root image"
+trap "losetup --detach-all" EXIT
+losetup --detach-all
 loop_dev=$(losetup -P -f --show raspbian-lite.img)
 
 echo " * resizing root partition"

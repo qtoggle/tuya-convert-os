@@ -11,7 +11,8 @@ rngd -r /dev/urandom
 echo 1 > /proc/sys/kernel/panic
 
 echo " * downloading tuya-convert"
-curl -L https://github.com/ct-Open-Source/tuya-convert/archive/94acc3bb020361266ceb74f082e1d25c92a60345.tar.gz -o tuya-convert.tar.gz
+latest_tuya-convert="$(curl --silent --head https://github.com/ct-Open-Source/tuya-convert/releases/latest | grep "^location:" | awk -F '/tag/' '{print $2}')"
+curl -L https://github.com/ct-Open-Source/tuya-convert/archive/${latest_tuya-convert}.tar.gz -o tuya-convert.tar.gz
 tar xvf tuya-convert.tar.gz
 rm tuya-convert.tar.gz
 mv tuya-convert-* tuya-convert
