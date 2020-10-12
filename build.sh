@@ -10,10 +10,10 @@ set -e
 echo " * downloading kernel"
 curl -L https://github.com/dhruvvyas90/qemu-rpi-kernel/raw/ec66c012f7cf2eaf936de1240ef81e1b20310d05/kernel-qemu-4.19.50-buster -o kernel.img
 curl -L https://github.com/dhruvvyas90/qemu-rpi-kernel/raw/ec66c012f7cf2eaf936de1240ef81e1b20310d05/versatile-pb.dtb -o versatile-pb.dtb
-    
+
 echo " * downloading raspbian image"
 curl https://downloads.raspberrypi.org/raspbian_lite/images/raspbian_lite-2020-02-14/2020-02-13-raspbian-buster-lite.zip -o raspbian-lite.zip
-    
+
 echo " * extracting raspbian image"
 rm -f raspbian-lite.img
 unzip -o raspbian-lite.zip
@@ -35,6 +35,8 @@ END
 sync
 
 echo " * mounting raspbian root image"
+trap "losetup --detach-all" EXIT
+losetup --detach-all
 loop_dev=$(losetup -P -f --show raspbian-lite.img)
 
 echo " * resizing root partition"
