@@ -45,7 +45,7 @@ web page that will walk you through the entire conversion process.
 
 ## Troubleshooting
 
-You can login remotely using SSH/Putty and use default Raspbian credentials (username `pi`, password `raspberrypi`).
+You can login remotely using SSH/Putty and use default Raspbian credentials (username `pi`, password `raspberry`).
 
 The frontend is provided by a service called `tcfrontend`. It is also responsible for spawning tuya-convert scripts in
 the background. You can read its log using `journactl`:
