@@ -1,4 +1,5 @@
-[![Join us on https://gitter.im/qtoggle/community](https://badges.gitter.im/qtoggle/community.png)](https://gitter.im/qtoggle/community?utm_source=badge&utm_medium=badge&utm_content=badge)
+[![Join us on Discord](https://img.shields.io/discord/742719160865521714)](https://discord.gg/wwYn3jJNPM)
+[![Join us on Facebook](https://img.shields.io/badge/chat-facebook-blue)](http://facebook.com/qtoggle)
 
 ---
 
